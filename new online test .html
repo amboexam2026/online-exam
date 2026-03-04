@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ambo Ifa Boru Special Boarding School - Online Exam</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:linear-gradient(135deg,#1e3c72,#2a5298);
+}
+
+.container{
+    width:95%;
+    max-width:900px;
+    margin:30px auto;
+    background:white;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 15px 35px rgba(0,0,0,0.4);
+}
+
+.header{
+    text-align:center;
+    border-bottom:3px solid #2a5298;
+    padding-bottom:15px;
+    margin-bottom:20px;
+}
+
+h1{ color:#1e3c72; }
+
+.guidance{
+    background:#eef2ff;
+    padding:20px;
+    border-left:6px solid #2a5298;
+    border-radius:8px;
+    line-height:1.7;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+
+button{
+    padding:12px 25px;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+    margin-top:20px;
+    background:#2a5298;
+    color:white;
+}
+
+button:disabled{
+    background:gray;
+    cursor:not-allowed;
+}
+
+.option{
+    display:flex;
+    align-items:center;
+    padding:12px;
+    margin:10px 0;
+    border:1px solid #ddd;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.option:hover{
+    background:#f0f4ff;
+}
+
+.option input{
+    margin-right:10px;
+    width:auto;
+}
+
+#timer{
+    text-align:right;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.reviewBox{
+    margin:15px 0;
+    padding:15px;
+    background:#f4f6ff;
+    border-left:5px solid #2a5298;
+    border-radius:8px;
+}
+
+.performance{
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+    margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- DIRECTION PAGE -->
+<div class="container" id="directionPage">
+
+<div class="header">
+<h1>AMBO IFA BORU SPECIAL BOARDING SCHOOL</h1>
+</div>
+
+<h3>Student Information</h3>
+
+<input type="text" id="studentName" placeholder="Enter Student Full Name">
+<input type="text" id="studentClass" placeholder="Enter Class (Example: Grade 9A)">
+<input type="text" id="studentNumber" placeholder="Enter Number">
+
+<div class="guidance">
+<b>GENERAL DIRECTIONS:</b><br><br>
+• This examination contains 10 multiple choice questions.<br>
+• Choose only ONE correct answer for each question.<br>
+• Time allowed: 10 minutes.<br>
+• Submit button activates ONLY after answering all 10 questions and reaching Question 10.<br>
+• Any form of cheating is strictly forbidden.
+</div>
+
+<div style="text-align:center;">
+<button onclick="startExam()">Start Exam</button>
+</div>
+
+</div>
+
+<!-- EXAM PAGE -->
+<div class="container" id="examPage" style="display:none;">
+
+<div id="timer">⏰ Time Left: 10:00</div>
+<div id="questionContainer"></div>
+
+<div style="text-align:center;">
+<button onclick="prevQuestion()">Previous</button>
+<button onclick="nextQuestion()">Next</button>
+<button id="submitBtn" onclick="submitTest()" disabled>Submit</button>
+</div>
+
+<div id="resultArea"></div>
+
+</div>
+
+<script>
+
+let studentName="";
+let studentClass="";
+let studentNumber="";
+
+let questions=[
+{q:"What does CPU stand for?",
+ options:["A. Central Processing Unit","B. Control Power Unit","C. Computer Print Unit","D. Central Print Unit"],
+ answer:"A",
+ exp:"CPU means Central Processing Unit."},
+
+{q:"SI unit of Force?",
+ options:["A. Joule","B. Newton","C. Watt","D. Pascal"],
+ answer:"B",
+ exp:"The SI unit of force is Newton."},
+
+{q:"Powerhouse of the cell?",
+ options:["A. Nucleus","B. Mitochondria","C. Ribosome","D. Cytoplasm"],
+ answer:"B",
+ exp:"Mitochondria produce energy."},
+
+{q:"Chemical formula of water?",
+ options:["A. CO2","B. H2O","C. O2","D. NaCl"],
+ answer:"B",
+ exp:"Water is H2O."},
+
+{q:"HTML stands for?",
+ options:["A. Hyper Text Markup Language","B. High Tool ML","C. Hyper Tool Language","D. None"],
+ answer:"A",
+ exp:"HTML means Hyper Text Markup Language."},
+
+{q:"Speed = ?",
+ options:["A. Distance / Time","B. Time × Distance","C. Mass / Time","D. None"],
+ answer:"A",
+ exp:"Speed equals Distance divided by Time."},
+
+{q:"Photosynthesis occurs in?",
+ options:["A. Nucleus","B. Chloroplast","C. Ribosome","D. Cytoplasm"],
+ answer:"B",
+ exp:"Photosynthesis occurs in chloroplast."},
+
+{q:"Gravity on Earth?",
+ options:["A. 8 m/s²","B. 9.8 m/s²","C. 11 m/s²","D. 12 m/s²"],
+ answer:"B",
+ exp:"Earth gravity is 9.8 m/s²."},
+
+{q:"Which is input device?",
+ options:["A. Monitor","B. Printer","C. Keyboard","D. Speaker"],
+ answer:"C",
+ exp:"Keyboard is input device."},
+
+{q:"Symbol of Sodium?",
+ options:["A. S","B. Na","C. So","D. Sn"],
+ answer:"B",
+ exp:"Symbol of Sodium is Na."}
+];
+
+let currentQuestion=0;
+let userAnswers=new Array(10);
+let timeLeft=600;
+let timer;
+
+function startExam(){
+
+studentName=document.getElementById("studentName").value.trim();
+studentClass=document.getElementById("studentClass").value.trim();
+studentNumber=document.getElementById("studentNumber").value.trim();
+
+if(studentName==="" || studentClass==="" || studentNumber===""){
+alert("Please fill all student information before starting exam.");
+return;
+}
+
+document.getElementById("directionPage").style.display="none";
+document.getElementById("examPage").style.display="block";
+
+showQuestion();
+timer=setInterval(updateTimer,1000);
+}
+
+function updateTimer(){
+let min=Math.floor(timeLeft/60);
+let sec=timeLeft%60;
+if(sec<10) sec="0"+sec;
+
+document.getElementById("timer").innerHTML="⏰ Time Left: "+min+":"+sec;
+
+if(timeLeft<=10){
+document.getElementById("timer").style.color="red";
+}
+
+if(timeLeft<=0){
+clearInterval(timer);
+submitTest();
+}
+timeLeft--;
+}
+
+function showQuestion(){
+let q=questions[currentQuestion];
+let html="<h3>Question "+(currentQuestion+1)+": "+q.q+"</h3>";
+
+q.options.forEach(opt=>{
+let letter=opt.charAt(0);
+let checked=userAnswers[currentQuestion]===letter?"checked":"";
+html+=`
+<label class="option">
+<input type="radio" name="q${currentQuestion}" ${checked}
+onclick="saveAnswer('${letter}')">
+${opt}
+</label>`;
+});
+
+if(currentQuestion===9){
+html+="<div style='text-align:center;font-weight:bold;color:#2a5298;'>good lucky</div>";
+}
+
+document.getElementById("questionContainer").innerHTML=html;
+checkSubmit();
+}
+
+function saveAnswer(val){
+userAnswers[currentQuestion]=val;
+checkSubmit();
+}
+
+function checkSubmit(){
+let allAnswered=userAnswers.every(a=>a!==undefined);
+
+if(allAnswered && currentQuestion===9){
+document.getElementById("submitBtn").disabled=false;
+}else{
+document.getElementById("submitBtn").disabled=true;
+}
+}
+
+function nextQuestion(){
+if(currentQuestion<9){
+currentQuestion++;
+showQuestion();
+}
+checkSubmit();
+}
+
+function prevQuestion(){
+if(currentQuestion>0){
+currentQuestion--;
+showQuestion();
+}
+checkSubmit();
+}
+
+function submitTest(){
+clearInterval(timer);
+document.getElementById("submitBtn").disabled=true;
+
+let score=0;
+let review="";
+
+for(let i=0;i<questions.length;i++){
+if(userAnswers[i]===questions[i].answer) score++;
+
+review+=`
+<div class="reviewBox">
+<b>Question ${i+1}:</b> ${questions[i].q}<br>
+<b>Correct Answer:</b> ${questions[i].answer}<br>
+<b>Your Answer:</b> ${userAnswers[i]}<br>
+<b>Explanation:</b> ${questions[i].exp}
+</div>`;
+}
+
+let performance="";
+if(score>=9) performance="Excellent";
+else if(score>=7) performance="Very good";
+else if(score>=5) performance="Good";
+else performance="Needs improvement";
+
+document.getElementById("questionContainer").innerHTML="";
+document.getElementById("resultArea").innerHTML=
+"<h2 style='text-align:center;color:#1e3c72;'>Final Score: "+score+"/10</h2>"+
+"<div class='performance'>"+performance+"</div>"+
+"<h3>Student Information</h3>"+
+"Name: "+studentName+"<br>"+
+"Class: "+studentClass+"<br>"+
+"Number: "+studentNumber+"<br><br>"+
+review;
+}
+
+</script>
+
+</body>
+</html>
